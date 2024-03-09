@@ -51,4 +51,15 @@ class OrderController extends AbstractController
             'data' => $order,
         ]);
     }
+
+    #[Route('/order/{id}', name: 'app_order_delete', methods: ["DELETE"])]
+    public function deleteOrder(OrderService $orderService, $id): JsonResponse
+    {
+        $order = $orderService->deleteOrder($id);
+
+        return $this->json([
+            'success' => true,
+            'data' => $order,
+        ]);
+    }
 }

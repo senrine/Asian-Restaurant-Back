@@ -2,8 +2,10 @@
 
 namespace App\Repository;
 
+use App\Entity\Order;
 use App\Entity\OrderLine;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -16,9 +18,33 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class OrderLineRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private EntityManagerInterface $entityManager;
+
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
     {
         parent::__construct($registry, OrderLine::class);
+        $this->entityManager = $entityManager;
+    }
+
+    public function save(OrderLine $orderLine): void
+    {
+        $this->entityManager->persist($orderLine);
+        $this->entityManager->flush();
+    }
+
+    public function remove(OrderLine $orderLine): void
+    {
+        $this->entityManager->remove($orderLine);
+        $this->entityManager->flush();
+    }
+
+    public function findOneById(int $id) : OrderLine
+    {
+        return $this->createQueryBuilder("o")
+            ->where("o.id = :id")
+            ->setParameter("id", $id)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     //    /**

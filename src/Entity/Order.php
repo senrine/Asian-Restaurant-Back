@@ -27,7 +27,7 @@ class Order
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
-    #[ORM\OneToMany(targetEntity: OrderLine::class, mappedBy: 'orderParent', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: OrderLine::class, mappedBy: 'orderParent', orphanRemoval: true, cascade: ["persist"])]
     private Collection $orderLines;
 
     public function __construct()
@@ -78,16 +78,7 @@ class Order
         return $this;
     }
 
-    public function serialize(): array
-    {
 
-        return [
-            "id" => $this->getId(),
-            "user" => $this->getUser()->serialize(),
-            "date" => $this->getDate(),
-            "totalPrice" => $this->getTotalPrice()
-        ];
-    }
 
     /**
      * @return Collection<int, OrderLine>
@@ -119,4 +110,18 @@ class Order
         return $this;
     }
 
+    public function serialize(): array
+    {
+        $orderLinesSerialized = [];
+        foreach ($this->getOrderLines()->toArray() as $orderLine){
+            $orderLinesSerialized[] = $orderLine->serialize();
+        }
+        return [
+            "id" => $this->getId(),
+            "user" => $this->getUser()->serialize(),
+            "date" => $this->getDate(),
+            "totalPrice" => $this->getTotalPrice(),
+            "orderLine" => $orderLinesSerialized
+        ];
+    }
 }

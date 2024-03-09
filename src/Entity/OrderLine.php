@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\OrderLineRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: OrderLineRepository::class)]
@@ -13,32 +15,22 @@ class OrderLine
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Menu $menu = null;
 
     #[ORM\Column]
     private ?int $quantity = null;
 
     #[ORM\ManyToOne(inversedBy: 'orderLines')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Order $orderParent = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Menu $menu = null;
+
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getMenu(): ?Menu
-    {
-        return $this->menu;
-    }
-
-    public function setMenu(Menu $menu): static
-    {
-        $this->menu = $menu;
-
-        return $this;
     }
 
     public function getQuantity(): ?int
@@ -64,4 +56,30 @@ class OrderLine
 
         return $this;
     }
+
+
+    public function getMenu(): ?Menu
+    {
+        return $this->menu;
+    }
+
+    public function setMenu(?Menu $menu): static
+    {
+        $this->menu = $menu;
+
+        return $this;
+    }
+
+
+    public function serialize(): array
+    {
+
+    return [
+        "id" => $this->getId(),
+        "menu"=> $this->getMenu()->serialize(),
+        "quantity" => $this->getQuantity()
+    ];
+}
+
+
 }
