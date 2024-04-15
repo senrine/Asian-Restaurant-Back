@@ -14,7 +14,6 @@ class MenuController extends AbstractController
     public function getMenus(MenuService $menuService): JsonResponse
     {
         return $this->json([
-            'success' => true,
             'data' => $menuService->getMenus()
         ]);
     }
@@ -23,7 +22,6 @@ class MenuController extends AbstractController
     public function getMenuById(MenuService $menuService, $id): JsonResponse
     {
         return $this->json([
-            'success' => true,
             'data' => $menuService->getMenuById($id)
         ]);
     }
@@ -35,7 +33,6 @@ class MenuController extends AbstractController
         $menu = $menuService->createMenu($data);
 
         return $this->json([
-            'success' => true,
             'data' => $menu
         ]);
     }
@@ -44,7 +41,6 @@ class MenuController extends AbstractController
     public function deleteMenu(MenuService $menuService, $id): JsonResponse
     {
         return $this->json([
-            'success' => true,
             'data' => $menuService->deleteMenu($id)
         ]);
     }
@@ -56,7 +52,6 @@ class MenuController extends AbstractController
 
 
         return $this->json([
-            'success' => true,
             'data' => $menuService->updateMenu($data,$id)
         ]);
     }

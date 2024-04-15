@@ -43,4 +43,16 @@ class SecurityController extends AbstractController
     public function logout() : void
     {
     }
+
+    #[Route('/{id}', name: 'app_user_update', methods: ["PUT"])]
+    public function update(Request $request, UserService $userService,$id): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $user = $userService->updateUser($data,$id);
+
+        return $this->json([
+            'success'=> true,
+            'user'=>$user
+        ]);
+    }
 }

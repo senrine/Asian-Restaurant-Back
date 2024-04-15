@@ -42,7 +42,7 @@ class OrderService
 
     public function createOrder(array $data): array
     {
-        if ($data["menuId"] === null || $data["userId"] === null || $data["totalPrice"] === null) {
+        if ($data["menuId"] === null || $data["userId"] === null) {
             return [];
         }
 
@@ -50,7 +50,6 @@ class OrderService
 
         $order = new Order();
 
-        $order->setTotalPrice($data["totalPrice"]);
         $order->setUser($user);
 
         $date = new \DateTime();
@@ -62,6 +61,7 @@ class OrderService
             $menu = $this->menuRepository->findOneById($id);
             $orderLine->setMenu($menu);
             $orderLine->setQuantity($count);
+            $order->setTotalPrice($order->getTotalPrice() + $menu->getPrice() * $count);
             $this->orderLineRepository->save($orderLine);
             $order->addOrderLine($orderLine);
         }
@@ -79,15 +79,21 @@ class OrderService
             foreach ($occurences as $id => $count) {
                 $menu = $this->menuRepository->findOneById($id);
                 $line = $this->getOrderLineByMenuOrFalse($order, $menu);
-                if($line) {
+                if ($line) {
                     $line->setQuantity($line->getQuantity() + $count);
+                    $this->orderLineRepository->save($line);
+                    $order->addOrderLine($line);
                 } else {
                     $line = new OrderLine();
                     $line->setMenu($menu);
                     $line->setQuantity($count);
                     $line->setOrderParent($order);
+                    $this->orderLineRepository->save($line);
+                    $order->addOrderLine($line);
+
                 }
-                $this->orderLineRepository->save($line);
+                $order->setTotalPrice($menu->getPrice() * $count + $order->getTotalPrice());
+
             }
         }
 
@@ -96,9 +102,6 @@ class OrderService
             $order->setUser($user);
         }
 
-        if (array_key_exists("totalPrice", $data)) {
-            $order->setTotalPrice($data["totalPrice"]);
-        }
 
         $date = new \DateTime();
         $order->setDate($date);
@@ -108,20 +111,46 @@ class OrderService
         return $order->serialize();
     }
 
-    public function deleteOrder(int $id):array
+    public function deleteOrder(int $id): array
     {
         $order = $this->orderRepository->findOneById($id);
         $this->orderRepository->remove($order);
 
         return $order->serialize();
     }
-    private function getOrderLineByMenuOrFalse(Order $order, Menu $menu) : OrderLine|bool
+
+    private function getOrderLineByMenuOrFalse(Order $order, Menu $menu): OrderLine|bool
     {
         foreach ($order->getOrderLines() as $line) {
-            if($line->getMenu() === $menu) {
+            if ($line->getMenu() === $menu) {
                 return $line;
             }
         }
         return false;
     }
+
+    public function deleteOrMinusOneMenu(int $id, array $data): array
+    {
+        $order = $this->orderRepository->findOneById($id);
+        $menu = $this->menuRepository->findOneById($data["menuId"]);
+        $delete = $data["delete"];
+        $minusOne = $data["minusOne"];
+        $line = $this->getOrderLineByMenuOrFalse($order, $menu);
+
+        if ($line && $minusOne) {
+            $line->setQuantity($line->getQuantity() - 1);
+            $this->orderLineRepository->save($line);
+            $order->setTotalPrice($order->getTotalPrice() - $line->getMenu()->getPrice());
+        }
+        if ($line && $delete) {
+            $order->removeOrderLine($line);
+            $priceOfLine = $line->getMenu()->getPrice()*$line->getQuantity();
+            $order->setTotalPrice($order->getTotalPrice() - $priceOfLine);
+
+            $this->orderLineRepository->remove($line);
+        }
+        $this->orderRepository->save($order);
+        return $order->serialize();
+    }
+
 }

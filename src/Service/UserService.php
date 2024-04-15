@@ -34,8 +34,20 @@ class UserService
         }
     }
 
-    public function login(array $data): array
+    public function login(array $data)
     {
 
     }
+
+    public function updateUser(array $data, int $id): array
+    {
+        $user = $this->userRepository->findOneById($id);
+        $user->setName($data["name"]);
+        $user->setEmail($data["email"]);
+        $user->setAddress($data["address"]);
+        $user->setPhoneNumber($data["phoneNumber"]);
+
+        return $user->serialize();
+    }
+
 }

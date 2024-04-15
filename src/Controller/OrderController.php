@@ -52,14 +52,26 @@ class OrderController extends AbstractController
         ]);
     }
 
-    #[Route('/order/{id}', name: 'app_order_delete', methods: ["DELETE"])]
-    public function deleteOrder(OrderService $orderService, $id): JsonResponse
+    #[Route('/order/{id}', name: 'app_order_delete_line', methods: ["PATCH"])]
+    public function deleteLine(OrderService $orderService, Request $request, $id): JsonResponse
     {
-        $order = $orderService->deleteOrder($id);
+        $data = json_decode($request->getContent(), true);
+        $order = $orderService->deleteOrMinusOneMenu($id, $data);
 
         return $this->json([
             'success' => true,
             'data' => $order,
         ]);
     }
+
+    #[Route('/order/{id}', name: 'app_order_delete', methods: ["DELETE"])]
+    public function deleteOrder(OrderService $orderService, $id): JsonResponse
+    {
+        $order = $orderService->deleteOrder($id);
+
+        return $this->json([
+            'data' => "Order deleted successfully",
+        ]);
+    }
+
 }

@@ -1,0 +1,34 @@
+version: "3.7"
+
+services:
+  # Conteneur Apache simple gérant les vhosts
+  httpd:
+    container_name: asian_restaurant_apache
+    restart: on-failure
+    image: httpd:2.4
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./apache/ssl/localhost.crt:/usr/local/apache2/conf/server.crt:delegated
+      - ./apache/ssl/localhost.key:/usr/local/apache2/conf/server.key:delegated
+      - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf:delegated
+      - ./apache/vhosts/:/usr/local/apache2/conf/vhosts:delegated
+      - ../:/usr/local/apache2/htdocs:delegated
+      - ./var/logs/apache/:/var/log/apache2:delegated
+    depends_on:
+      - php
+
+  # Conteneur proxy php
+  php:
+    container_name: asian_restaurant_php
+    restart: on-failure
+    build: .
+    image: local/php:8.2-njs-18
+    expose:
+      - 9009
+    volumes:
+      - ../:/usr/local/apache2/htdocs:delegated
+      - ./var/logs/php/:/var/log/php:delegated
+
+
